@@ -9,7 +9,7 @@
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "1767FBA5-AB45-4A53-A8D7-767E6A8692B3",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
-    "40D912770F74B782D271F42DA80123F1A9C2226A" : "AAFaceDetection",
+    "40D912770F74B782D271F42DA80123F1A9C2226A" : "face\/",
     "0B0B95484AD488B8C39195A6DAF9FB3BE1F8A511" : "Visage"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "FaceDetection",

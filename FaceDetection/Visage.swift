@@ -42,43 +42,43 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private(set) var rightEyeClosed : Bool?
     
     //Notifications you can subscribe to for reacting to changes in the detected properties.
-    private let visageNoFaceDetectedNotification = NSNotification(name: "visageNoFaceDetectedNotification", object: nil)
-    private let visageFaceDetectedNotification = NSNotification(name: "visageFaceDetectedNotification", object: nil)
-    private let visageSmilingNotification = NSNotification(name: "visageHasSmileNotification", object: nil)
-    private let visageNotSmilingNotification = NSNotification(name: "visageHasNoSmileNotification", object: nil)
-    private let visageBlinkingNotification = NSNotification(name: "visageBlinkingNotification", object: nil)
-    private let visageNotBlinkingNotification = NSNotification(name: "visageNotBlinkingNotification", object: nil)
-    private let visageWinkingNotification = NSNotification(name: "visageWinkingNotification", object: nil)
-    private let visageNotWinkingNotification = NSNotification(name: "visageNotWinkingNotification", object: nil)
-    private let visageLeftEyeClosedNotification = NSNotification(name: "visageLeftEyeClosedNotification", object: nil)
-    private let visageLeftEyeOpenNotification = NSNotification(name: "visageLeftEyeOpenNotification", object: nil)
-    private let visageRightEyeClosedNotification = NSNotification(name: "visageRightEyeClosedNotification", object: nil)
-    private let visageRightEyeOpenNotification = NSNotification(name: "visageRightEyeOpenNotification", object: nil)
+    private let visageNoFaceDetectedNotification = NSNotification(name: NSNotification.Name(rawValue: "visageNoFaceDetectedNotification"), object: nil)
+    private let visageFaceDetectedNotification = NSNotification(name: NSNotification.Name(rawValue: "visageFaceDetectedNotification"), object: nil)
+    private let visageSmilingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageHasSmileNotification"), object: nil)
+    private let visageNotSmilingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageHasNoSmileNotification"), object: nil)
+    private let visageBlinkingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageBlinkingNotification"), object: nil)
+    private let visageNotBlinkingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageNotBlinkingNotification"), object: nil)
+    private let visageWinkingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageWinkingNotification"), object: nil)
+    private let visageNotWinkingNotification = NSNotification(name: NSNotification.Name(rawValue: "visageNotWinkingNotification"), object: nil)
+    private let visageLeftEyeClosedNotification = NSNotification(name: NSNotification.Name(rawValue: "visageLeftEyeClosedNotification"), object: nil)
+    private let visageLeftEyeOpenNotification = NSNotification(name: NSNotification.Name(rawValue: "visageLeftEyeOpenNotification"), object: nil)
+    private let visageRightEyeClosedNotification = NSNotification(name: NSNotification.Name(rawValue: "visageRightEyeClosedNotification"), object: nil)
+    private let visageRightEyeOpenNotification = NSNotification(name: NSNotification.Name(rawValue: "visageRightEyeOpenNotification"), object: nil)
     
     //Private variables that cannot be accessed by other classes in any way.
     private var faceDetector : CIDetector?
     private var videoDataOutput : AVCaptureVideoDataOutput?
-    private var videoDataOutputQueue : dispatch_queue_t?
+    private var videoDataOutputQueue : DispatchQueue?
     private var cameraPreviewLayer : AVCaptureVideoPreviewLayer?
     private var captureSession : AVCaptureSession = AVCaptureSession()
-    private let notificationCenter : NSNotificationCenter = NSNotificationCenter.defaultCenter()
+    private let notificationCenter : NotificationCenter = NotificationCenter.default
     private var currentOrientation : Int?
     
     init(cameraPosition : CameraDevice, optimizeFor : DetectorAccuracy) {
         super.init()
         
-        currentOrientation = convertOrientation(UIDevice.currentDevice().orientation)
+        currentOrientation = convertOrientation(deviceOrientation: UIDevice.current.orientation)
         
         switch cameraPosition {
-        case .FaceTimeCamera : self.captureSetup(AVCaptureDevicePosition.Front)
-        case .ISightCamera : self.captureSetup(AVCaptureDevicePosition.Back)
+        case .FaceTimeCamera : self.captureSetup(position: AVCaptureDevicePosition.front)
+        case .ISightCamera : self.captureSetup(position: AVCaptureDevicePosition.back)
         }
         
         var faceDetectorOptions : [String : AnyObject]?
         
         switch optimizeFor {
-        case .BatterySaving : faceDetectorOptions = [CIDetectorAccuracy : CIDetectorAccuracyLow]
-        case .HigherPerformance : faceDetectorOptions = [CIDetectorAccuracy : CIDetectorAccuracyHigh]
+        case .BatterySaving : faceDetectorOptions = [CIDetectorAccuracy : CIDetectorAccuracyLow as AnyObject]
+        case .HigherPerformance : faceDetectorOptions = [CIDetectorAccuracy : CIDetectorAccuracyHigh as AnyObject]
         }
         
         self.faceDetector = CIDetector(ofType: CIDetectorTypeFace, context: nil, options: faceDetectorOptions)
@@ -97,14 +97,14 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         var captureError : NSError?
         var captureDevice : AVCaptureDevice!
         
-        for testedDevice in AVCaptureDevice.devicesWithMediaType(AVMediaTypeVideo){
-            if (testedDevice.position == position) {
+        for testedDevice in AVCaptureDevice.devices(withMediaType: AVMediaTypeVideo){
+            if ((testedDevice as AnyObject).position == position) {
                 captureDevice = testedDevice as! AVCaptureDevice
             }
         }
         
         if (captureDevice == nil) {
-            captureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+            captureDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
         }
         
         var deviceInput : AVCaptureDeviceInput?
@@ -122,9 +122,9 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
             }
             
             self.videoDataOutput = AVCaptureVideoDataOutput()
-            self.videoDataOutput!.videoSettings = [kCVPixelBufferPixelFormatTypeKey: Int(kCVPixelFormatType_32BGRA)]
+            self.videoDataOutput!.videoSettings = [kCVPixelBufferPixelFormatTypeKey as AnyHashable: Int(kCVPixelFormatType_32BGRA)]
             self.videoDataOutput!.alwaysDiscardsLateVideoFrames = true
-            self.videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL)
+            self.videoDataOutputQueue = DispatchQueue(label:"VideoDataOutputQueue")
             self.videoDataOutput!.setSampleBufferDelegate(self, queue: self.videoDataOutputQueue!)
             
             if (captureSession.canAddOutput(self.videoDataOutput)) {
@@ -132,35 +132,35 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
             }
         }
         
-        visageCameraView.frame = UIScreen.mainScreen().bounds
-		
+        visageCameraView.frame = UIScreen.main.bounds
+
 		let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-        previewLayer.frame = UIScreen.mainScreen().bounds
-        previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
-        visageCameraView.layer.addSublayer(previewLayer)
+        previewLayer?.frame = UIScreen.main.bounds
+        previewLayer?.videoGravity = AVLayerVideoGravityResizeAspectFill
+        visageCameraView.layer.addSublayer(previewLayer!)
     }
     
     var options : [String : AnyObject]?
     
     //MARK: CAPTURE-OUTPUT/ANALYSIS OF FACIAL-FEATURES
-    func captureOutput(captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, fromConnection connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputSampleBuffer sampleBuffer: CMSampleBuffer!, from connection: AVCaptureConnection!) {
         
         let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)
         let opaqueBuffer = Unmanaged<CVImageBuffer>.passUnretained(imageBuffer!).toOpaque()
         let pixelBuffer = Unmanaged<CVPixelBuffer>.fromOpaque(opaqueBuffer).takeUnretainedValue()
-        let sourceImage = CIImage(CVPixelBuffer: pixelBuffer, options: nil)
-        options = [CIDetectorSmile : true, CIDetectorEyeBlink: true, CIDetectorImageOrientation : 6]
+        let sourceImage = CIImage(cvPixelBuffer: pixelBuffer, options: nil)
+        options = [CIDetectorSmile : true as AnyObject, CIDetectorEyeBlink: true as AnyObject, CIDetectorImageOrientation : 6 as AnyObject]
         
-        let features = self.faceDetector!.featuresInImage(sourceImage, options: options)
+        let features = self.faceDetector!.features(in: sourceImage, options: options)
         
         if (features.count != 0) {
             
             if (onlyFireNotificatonOnStatusChange == true) {
                 if (self.faceDetected == false) {
-                    notificationCenter.postNotification(visageFaceDetectedNotification)
+                    notificationCenter.post(visageFaceDetectedNotification as Notification)
                 }
             } else {
-                notificationCenter.postNotification(visageFaceDetectedNotification)
+                notificationCenter.post(visageFaceDetectedNotification as Notification)
             }
             
             self.faceDetected = true
@@ -194,10 +194,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                 if (feature.hasSmile) {
                     if (onlyFireNotificatonOnStatusChange == true) {
                         if (self.hasSmile == false) {
-                            notificationCenter.postNotification(visageSmilingNotification)
+                            notificationCenter.post(visageSmilingNotification as Notification)
                         }
                     } else {
-                        notificationCenter.postNotification(visageSmilingNotification)
+                        notificationCenter.post(visageSmilingNotification as Notification)
                     }
                     
                     hasSmile = feature.hasSmile
@@ -205,10 +205,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                 } else {
                     if (onlyFireNotificatonOnStatusChange == true) {
                         if (self.hasSmile == true) {
-                            notificationCenter.postNotification(visageNotSmilingNotification)
+                            notificationCenter.post(visageNotSmilingNotification as Notification)
                         }
                     } else {
-                        notificationCenter.postNotification(visageNotSmilingNotification)
+                        notificationCenter.post(visageNotSmilingNotification as Notification)
                     }
                     
                     hasSmile = feature.hasSmile
@@ -217,10 +217,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                 if (feature.leftEyeClosed || feature.rightEyeClosed) {
                     if (onlyFireNotificatonOnStatusChange == true) {
                         if (self.isWinking == false) {
-                            notificationCenter.postNotification(visageWinkingNotification)
+                            notificationCenter.post(visageWinkingNotification as Notification)
                         }
                     } else {
-                        notificationCenter.postNotification(visageWinkingNotification)
+                        notificationCenter.post(visageWinkingNotification as Notification)
                     }
                     
                     isWinking = true
@@ -228,10 +228,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                     if (feature.leftEyeClosed) {
                         if (onlyFireNotificatonOnStatusChange == true) {
                             if (self.leftEyeClosed == false) {
-                                notificationCenter.postNotification(visageLeftEyeClosedNotification)
+                                notificationCenter.post(visageLeftEyeClosedNotification as Notification)
                             }
                         } else {
-                            notificationCenter.postNotification(visageLeftEyeClosedNotification)
+                            notificationCenter.post(visageLeftEyeClosedNotification as Notification)
                         }
                         
                         leftEyeClosed = feature.leftEyeClosed
@@ -239,10 +239,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                     if (feature.rightEyeClosed) {
                         if (onlyFireNotificatonOnStatusChange == true) {
                             if (self.rightEyeClosed == false) {
-                                notificationCenter.postNotification(visageRightEyeClosedNotification)
+                                notificationCenter.post(visageRightEyeClosedNotification as Notification)
                             }
                         } else {
-                            notificationCenter.postNotification(visageRightEyeClosedNotification)
+                            notificationCenter.post(visageRightEyeClosedNotification as Notification)
                         }
                         
                         rightEyeClosed = feature.rightEyeClosed
@@ -250,10 +250,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                     if (feature.leftEyeClosed && feature.rightEyeClosed) {
                         if (onlyFireNotificatonOnStatusChange == true) {
                             if (self.isBlinking == false) {
-                                notificationCenter.postNotification(visageBlinkingNotification)
+                                notificationCenter.post(visageBlinkingNotification as Notification)
                             }
                         } else {
-                            notificationCenter.postNotification(visageBlinkingNotification)
+                            notificationCenter.post(visageBlinkingNotification as Notification)
                         }
                         
                         isBlinking = true
@@ -262,22 +262,22 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
                     
                     if (onlyFireNotificatonOnStatusChange == true) {
                         if (self.isBlinking == true) {
-                            notificationCenter.postNotification(visageNotBlinkingNotification)
+                            notificationCenter.post(visageNotBlinkingNotification as Notification)
                         }
                         if (self.isWinking == true) {
-                            notificationCenter.postNotification(visageNotWinkingNotification)
+                            notificationCenter.post(visageNotWinkingNotification as Notification)
                         }
                         if (self.leftEyeClosed == true) {
-                            notificationCenter.postNotification(visageLeftEyeOpenNotification)
+                            notificationCenter.post(visageLeftEyeOpenNotification as Notification)
                         }
                         if (self.rightEyeClosed == true) {
-                            notificationCenter.postNotification(visageRightEyeOpenNotification)
+                            notificationCenter.post(visageRightEyeOpenNotification as Notification)
                         }
                     } else {
-                        notificationCenter.postNotification(visageNotBlinkingNotification)
-                        notificationCenter.postNotification(visageNotWinkingNotification)
-                        notificationCenter.postNotification(visageLeftEyeOpenNotification)
-                        notificationCenter.postNotification(visageRightEyeOpenNotification)
+                        notificationCenter.post(visageNotBlinkingNotification as Notification)
+                        notificationCenter.post(visageNotWinkingNotification as Notification)
+                        notificationCenter.post(visageLeftEyeOpenNotification as Notification)
+                        notificationCenter.post(visageRightEyeOpenNotification as Notification)
                     }
                     
                     isBlinking = false
@@ -289,10 +289,10 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         } else {
             if (onlyFireNotificatonOnStatusChange == true) {
                 if (self.faceDetected == true) {
-                    notificationCenter.postNotification(visageNoFaceDetectedNotification)
+                    notificationCenter.post(visageNoFaceDetectedNotification as Notification)
                 }
             } else {
-                notificationCenter.postNotification(visageNoFaceDetectedNotification)
+                notificationCenter.post(visageNoFaceDetectedNotification as Notification)
             }
             
             self.faceDetected = false
@@ -303,16 +303,16 @@ class Visage: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private func convertOrientation(deviceOrientation: UIDeviceOrientation) -> Int {
         var orientation: Int = 0
         switch deviceOrientation {
-        case .Portrait:
+        case .portrait:
             orientation = 6
-        case .PortraitUpsideDown:
+        case .portraitUpsideDown:
             orientation = 2
-        case .LandscapeLeft:
+        case .landscapeLeft:
             orientation = 3
-        case .LandscapeRight:
+        case .landscapeRight:
             orientation = 4
         default : orientation = 1
         }
-        return 6
+        return orientation
     }
 }

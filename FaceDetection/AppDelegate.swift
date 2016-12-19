@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var activeCornerRadius : CGFloat = 0
     var incativeCornerRadius : CGFloat = 0
     
-    func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    private func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         window!.clipsToBounds = true
         
         let animation : CABasicAnimation = CABasicAnimation(keyPath: "cornerRadius")
@@ -25,29 +25,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         animation.toValue = activeCornerRadius
         animation.duration = 0.15
         window!.layer.cornerRadius = activeCornerRadius
-        window!.layer.addAnimation(animation, forKey: "cornerRadius")
+        window!.layer.add(animation, forKey: "cornerRadius")
         
         return true
     }
     
-    func applicationWillResignActive(application: UIApplication) {
+    func applicationWillResignActive(_ application: UIApplication) {
         let animation : CABasicAnimation = CABasicAnimation(keyPath: "cornerRadius")
         animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
         animation.fromValue = activeCornerRadius
         animation.toValue = incativeCornerRadius
         animation.duration = 0.15
         window!.layer.cornerRadius = incativeCornerRadius
-        window!.layer.addAnimation(animation, forKey: "cornerRadius")
+        window!.layer.add(animation, forKey: "cornerRadius")
     }
     
-    func applicationDidBecomeActive(application: UIApplication) {
+    func applicationDidBecomeActive(_ application: UIApplication) {
         let animation : CABasicAnimation = CABasicAnimation(keyPath: "cornerRadius")
         animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
         animation.fromValue = incativeCornerRadius
         animation.toValue = activeCornerRadius
         animation.duration = 0.15
         window!.layer.cornerRadius = activeCornerRadius
-        window!.layer.addAnimation(animation, forKey: "cornerRadius")
+        window!.layer.add(animation, forKey: "cornerRadius")
     }
 }
 

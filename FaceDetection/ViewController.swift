@@ -7,13 +7,14 @@
 //
 
 import UIKit
+import NotificationCenter
 
 class ViewController: UIViewController {
     
     private var visage : Visage?
-    private let notificationCenter : NSNotificationCenter = NSNotificationCenter.defaultCenter()
+    private let notificationCenter : NotificationCenter = NotificationCenter.default
     
-    let emojiLabel : UILabel = UILabel(frame: UIScreen.mainScreen().bounds)
+    let emojiLabel : UILabel = UILabel(frame: UIScreen.main.bounds)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,20 +33,29 @@ class ViewController: UIViewController {
         let cameraView = visage!.visageCameraView
         self.view.addSubview(cameraView)
         
-        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .Light))
+        let visualEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
         visualEffectView.frame = self.view.bounds
         self.view.addSubview(visualEffectView)
-        
+
         emojiLabel.text = "😐"
-        emojiLabel.font = UIFont.systemFontOfSize(50)
-        emojiLabel.textAlignment = .Center
+        emojiLabel.font = UIFont.systemFont(ofSize: 50)
+        emojiLabel.textAlignment = .center
         self.view.addSubview(emojiLabel)
         
         //Subscribing to the "visageFaceDetectedNotification" (for a list of all available notifications check out the "ReadMe" or switch to "Visage.swift") and reacting to it with a completionHandler. You can also use the other .addObserver-Methods to react to notifications.
-        NSNotificationCenter.defaultCenter().addObserverForName("visageFaceDetectedNotification", object: nil, queue: NSOperationQueue.mainQueue(), usingBlock: { notification in
+
+        let center = NotificationCenter.default
+        let mainQueue = OperationQueue.main
+
+
+
+
+
+       center.addObserver(forName: Notification.Name(rawValue: "visageFaceDetectedNotification"), object: nil, queue: mainQueue) { (notification) in
             
-            UIView.animateWithDuration(0.5, animations: {
+            UIView.animate(withDuration: 0.5, animations: {
                 self.emojiLabel.alpha = 1
+
             })
             
             if ((self.visage!.hasSmile == true && self.visage!.isWinking == true)) {
@@ -57,18 +67,17 @@ class ViewController: UIViewController {
             } else {
                 self.emojiLabel.text = "😐"
             }
-        })
-        
-        //The same thing for the opposite, when no face is detected things are reset.
-        NSNotificationCenter.defaultCenter().addObserverForName("visageNoFaceDetectedNotification", object: nil, queue: NSOperationQueue.mainQueue(), usingBlock: { notification in
-            
-            UIView.animateWithDuration(0.5, animations: {
+        }
+//
+//        //The same thing for the opposite, when no face is detected things are reset.
+      center.addObserver(forName: Notification.Name(rawValue: "visageFaceDetectedNotification"), object: nil, queue: mainQueue) { (notification) in
+            UIView.animate(withDuration: 0.5, animations: {
                 self.emojiLabel.alpha = 0.25
             })
-        })
+        }
     }
     
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden: Bool {
         return true
     }
 }
